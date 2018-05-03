@@ -1,0 +1,215 @@
+<?php $this->layout('layout::default', ['title' => 'Home']) ?>
+
+    <div class="row" id="env-general">
+
+        <div class="col-2">
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <ul class="list-group" id="last-requests">
+                        <?php
+                        foreach ($requests as $request) {
+                            ?>
+                            <li class="list-group-item"><?= $request['method'] . " <br> " . $request['url'] ?></li>
+                            <?php
+                        }
+                        ?>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-10">
+            <div class="row">
+                <div class="col-2">
+                    <div class="form-group">
+                        <select class="form-control" id="method">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="URL" id="url">
+                    </div>
+                </div>
+                <div class="col-2">
+                    <button id="btn-send" type="button" class="btn btn-outline-secondary float-right"><i class="fa fa-paper-plane"></i> Enviar</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <textarea class="form-control" id="headers" rows="3" placeholder="Headers"></textarea>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col">
+                    <p>Body</p>
+                    <div id="editor"></div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col">
+                    <p>Response</p>
+                    <p id="status-code"></p>
+                    <div id="response"></div>
+                </div>
+            </div>
+            <hr>
+        </div>
+    </div>
+
+
+<?php
+$this->start("javascript");
+?>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ace.js"></script>
+    <script>
+
+        url = localStorage.getItem("url");
+        method = localStorage.getItem("method");
+        headers = localStorage.getItem("headers");
+        body = localStorage.getItem("body");
+
+
+        var responseEditor = ace.edit("response");
+        responseEditor.setTheme("ace/theme/monokai");
+        responseEditor.session.setMode("ace/mode/json");
+
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/json");
+
+
+        editor.commands.addCommand({
+            name: "send",
+            exec: function () {
+                send();
+            },
+            bindKey: {win: 'Ctrl+Enter'}
+        });
+
+        $(function () {
+            $("#url").val(url);
+            $("#method").val(method);
+            $("#headers").val(headers);
+            editor.setValue(body);
+
+            $("#btn-send").click(send);
+            $("#url").keydown(function (e) {
+                console.log(e);
+                if (e.ctrlKey == true && e.keyCode == 13) {
+                    send();
+                }
+            })
+
+
+            // $("#last-requests").find("li").click(function () {
+            //     $("#url").val($(this).data("url"));
+            //     $("#method").val($(this).data("method"));
+            //     $("#headers").val($(this).data("headers"));
+            //     editor.setValue($(this).data("body"));
+            // });
+        });
+
+        function send() {
+
+            $("#btn-send").html("<i class='fa fa-spin fa-refresh'></i> Enviando...");
+            $("#btn-send").attr("disabled", true);
+
+
+            var url = $("#url").val();
+            var method = $("#method").val();
+            var headers = $("#headers").val();
+            var body = "";
+            if (method == "POST" || method == "PUT") {
+                var body = editor.getValue();
+            }
+
+
+            localStorage.setItem("url", url);
+            localStorage.setItem("method", method);
+            localStorage.setItem("headers", headers);
+            localStorage.setItem("body", body);
+
+            $("#status-code").html("Enviando...");
+            responseEditor.setValue("");
+
+            $.ajax("/send", {
+                method: "POST",
+                data: {
+                    url: url,
+                    method: method,
+                    headers: headers,
+                    body: body
+                }
+            }).done(function (response) {
+                if (response.body != "") {
+
+                    try {
+                        var json = JSON.parse(response.body);
+                    } catch (e) {
+                        var json = null;
+                    }
+                    if (json != null && json != undefined) {
+                        response.body = JSON.stringify(json, null, "\t"); // Indented with tab
+                    }
+                }
+
+                $("#status-code").html(response.statusCode);
+                responseEditor.setValue(response.body);
+
+
+                $("#btn-send").html("<i class='fa fa-paper-plane'></i> Enviar");
+                $("#btn-send").removeAttr("disabled");
+            });
+        }
+    </script>
+<?php
+$this->stop("javascript");
+
+?>
+
+<?php
+$this->start("stylesheets");
+?>
+    <style>
+        #env-general {
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        #editor {
+            height: 250px;
+        }
+
+        #response {
+            height: 500px;
+        }
+
+        .list-group-item {
+            font-size: 13px;
+            word-wrap: break-word;
+        }
+
+        #last-requests{
+            max-height: 400px;
+            overflow-y: scroll;
+        }
+
+    </style>
+
+<?php
+$this->stop("stylesheets");
+?>
