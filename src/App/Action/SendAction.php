@@ -16,15 +16,25 @@ class SendAction implements ServerMiddlewareInterface
         $body = $request->getParsedBody();
 
         $headers = $this->parseHeaders($body['headers']);
-
+        $refreshList = false;
         try {
             /** @var \SQLite3 $con */
             $con = $request->getAttribute("con");
-            $sql = "INSERT INTO request('method', url, headers, body) VALUES('" . $body['method'] . "','" . $body['url'] . "','" . $body['headers'] . "','" . $body['body'] . "')";
 
-            $con->query($sql);
+            $sql = "SELECT count(*) AS num_rows FROM request 
+                    WHERE method='" . $body['method'] . "' AND url='" . $body['url'] . "' 
+                    AND headers='" . $body['headers'] . "' AND body='" . $body['body'] . "' AND created_at BETWEEN DATETIME('now','-1 day') AND  DATETIME('now');";
+
+            $res = $con->query($sql)->fetchArray(SQLITE3_ASSOC);
+
+            if ($res['num_rows'] == 0) {
+                $sql = "INSERT INTO request('method', url, headers, body, created_at) VALUES('" . $body['method'] . "','" . $body['url'] . "','" . $body['headers'] . "','" . $body['body'] . "', DATETIME('now'))";
+
+                $con->query($sql);
+                $refreshList = true;
+            }
         } catch (\Exception $e) {
-
+echo $e->getMessage();exit;
         }
 
 
@@ -59,7 +69,7 @@ class SendAction implements ServerMiddlewareInterface
         $statusCode = $response->getStatusCode();
 
 
-        return new JsonResponse(["body" => $responseBody, "statusCode" => $statusCode]);
+        return new JsonResponse(["body" => $responseBody, "statusCode" => $statusCode, "refreshList" => $refreshList]);
     }
 
     public function parseHeaders($headers)

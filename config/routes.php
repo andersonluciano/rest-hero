@@ -28,7 +28,7 @@
 
 /** @var \Zend\Expressive\Application $app */
 
-$app->get('/', App\Action\HomePageAction::class, 'home');
+$app->route('/', App\Action\HomePageAction::class, ['GET', 'POST'], 'home');
 
 $app->get('/api/ping', App\Action\PingAction::class, 'api.ping');
 $app->route('/send', App\Action\SendAction::class, ["POST"], 'send');

@@ -1,31 +1,24 @@
 <?php $this->layout('layout::default', ['title' => 'Home']) ?>
 
-    <div class="row" id="env-general">
-
-        <div class="col-2">
+    <div class="row " id="env-general">
+        <div class="col-3" style="transition-duration: 1s;">
             <div class="row">
                 <div class="col">
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Search">
+                        <input type="text" id="search-input" class="form-control" placeholder="Search and Enter">
                     </div>
                 </div>
             </div>
             <div class="row">
                 <div class="col">
                     <ul class="list-group" id="last-requests">
-                        <?php
-                        foreach ($requests as $request) {
-                            ?>
-                            <li class="list-group-item"><?= $request['method'] . " <br> " . $request['url'] ?></li>
-                            <?php
-                        }
-                        ?>
+
                     </ul>
                 </div>
             </div>
 
         </div>
-        <div class="col-10" id="env-app">
+        <div class="col-9" id="env-app">
             <div class="row">
                 <div class="col-2">
                     <div class="form-group">
@@ -39,7 +32,7 @@
                 </div>
                 <div class="col">
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="URL" id="url">
+                        <input type="text" class="form-control" placeholder="URL and Enter" id="url">
                     </div>
                 </div>
                 <div class="col-2">
@@ -73,14 +66,9 @@
 <?php
 $this->start("javascript");
 ?>
+    <script src="/assets/3-party/toastr/build/toastr.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ace.js"></script>
     <script>
-
-        url = localStorage.getItem("url");
-        method = localStorage.getItem("method");
-        headers = localStorage.getItem("headers");
-        body = localStorage.getItem("body");
-
 
         var responseEditor = ace.edit("response");
         responseEditor.setTheme("ace/theme/monokai");
@@ -91,35 +79,77 @@ $this->start("javascript");
         editor.session.setMode("ace/mode/json");
 
 
-        editor.commands.addCommand({
-            name: "send",
-            exec: function () {
-                send();
-            },
-            bindKey: {win: 'Ctrl+Enter'}
-        });
-
         $(function () {
+            url = localStorage.getItem("url");
+            method = localStorage.getItem("method");
+            headers = localStorage.getItem("headers");
+            body = localStorage.getItem("body");
+
+            editor.commands.addCommand({
+                name: "send",
+                exec: function () {
+                    send();
+                },
+                bindKey: {win: 'Ctrl+Enter'}
+            });
+
             $("#url").val(url);
             $("#method").val(method);
             $("#headers").val(headers);
             editor.setValue(body);
 
+//----------------------------
+            $("#method").change(function () {
+                if ($(this).val() == "POST" || $(this).val() == "PUT") {
+                    $("#editor").slideDown(500);
+                } else {
+                    $("#editor").slideUp(500);
+                }
+            });
+            setTimeout(function () {
+                $("#method").change();
+            }, 1000);
+
+//----------------------------
             $("#btn-send").click(send);
             $("#url").keydown(function (e) {
                 console.log(e);
-                if (e.ctrlKey == true && e.keyCode == 13) {
+                if (e.keyCode == 13) {
                     send();
                 }
-            })
+            });
+//----------------------------
+            $("#search-input").change(function () {
+                if ($(this).val() == "") {
+                    loadLastRequests();
+                }
+            });
+            $("#search-input").keydown(function (e) {
+                console.log(e);
+                if (e.keyCode == 13) {
+                    if ($(this).val() == "") {
+                        loadLastRequests();
+                    } else {
+                        $.ajax("/?ajax=searchRequest", {
+                            method: "POST",
+                            data: {
+                                request: $("#search-input").val()
+                            }
+                        }).done(function (response) {
+                            if (response.exception == undefined) {
+                                $("#last-requests").html("");
+                                $(response).each(function (idx, elem) {
+                                    makeListItem(elem);
+                                });
+                            } else {
+                                toastr.error("Nenhum registro encontrado: " + response.exception);
+                            }
+                        });
+                    }
+                }
+            });
 
-
-            // $("#last-requests").find("li").click(function () {
-            //     $("#url").val($(this).data("url"));
-            //     $("#method").val($(this).data("method"));
-            //     $("#headers").val($(this).data("headers"));
-            //     editor.setValue($(this).data("body"));
-            // });
+            loadLastRequests();
         });
 
         function send() {
@@ -145,14 +175,15 @@ $this->start("javascript");
             $("#status-code").html("Enviando...");
             responseEditor.setValue("");
 
+            var data = {
+                url: url,
+                method: method,
+                headers: headers,
+                body: body
+            };
             $.ajax("/send", {
                 method: "POST",
-                data: {
-                    url: url,
-                    method: method,
-                    headers: headers,
-                    body: body
-                }
+                data: data
             }).done(function (response) {
                 if (response.body != "") {
 
@@ -172,7 +203,71 @@ $this->start("javascript");
 
                 $("#btn-send").html("<i class='fa fa-paper-plane'></i> Enviar");
                 $("#btn-send").removeAttr("disabled");
+
+                if (response.refreshList == true) {
+                    makeListItem(data, true);
+                }
+            }).error(function (response) {
+
+
+                toastr.error("Ocorreu algum problema durante a requisição");
+
+                console.log(response);
+
+
+                $("#status-code").html(response.status);
+                if (response.responseText != undefined) {
+                    responseEditor.setValue(response.responseText);
+                }
+
+                $("#btn-send").html("<i class='fa fa-paper-plane'></i> Enviar");
+                $("#btn-send").removeAttr("disabled");
             });
+        }
+
+        function loadLastRequests() {
+            $.ajax("/?ajax=loadRequests", {
+                method: "POST"
+            }).done(function (response) {
+                $("#last-requests").html("");
+                $(response).each(function (idx, elem) {
+                    makeListItem(elem);
+                });
+            });
+        }
+
+        function makeListItem(elem, prepend) {
+            var li = $("<li class='list-group-item' style='display: none;'>");
+            switch (elem.method) {
+                case "GET":
+                    badgeClass = 'badge-primary';
+                    break;
+                case "POST":
+                    badgeClass = 'badge-success';
+                    break;
+                case "PUT":
+                    badgeClass = 'badge-warning';
+                    break;
+                case "DELETE":
+                    badgeClass = 'badge-danger';
+                    break;
+            }
+
+            $(li).html('<span class="badge ' + badgeClass + '">' + elem.method + "</span><br>" + elem.url + "<br><small>" + elem.created_at + "</small>");
+            if (prepend != undefined) {
+                $("#last-requests").prepend(li);
+            } else {
+                $("#last-requests").append(li);
+            }
+
+            $(li).click(function () {
+                $("#url").val(elem.url);
+                $("#method").val(elem.method);
+                $("#headers").val(elem.headers);
+                editor.setValue(elem.body);
+                $("#method").change();
+            });
+            $(li).fadeIn(500);
         }
     </script>
 <?php
@@ -182,6 +277,7 @@ $this->stop("javascript");
 <?php
 $this->start("stylesheets");
 ?>
+    <link rel="stylesheet" href="/assets/3-party/toastr/build/toastr.min.css">
     <style>
         #env-general {
             margin-top: 30px;
@@ -199,10 +295,16 @@ $this->start("stylesheets");
         .list-group-item {
             font-size: 13px;
             word-wrap: break-word;
+            cursor: pointer;
+
+        }
+
+        .list-group-item:hover {
+            background: #e2e2e2;
         }
 
         #last-requests {
-            max-height: 400px;
+            height: 500px;
             overflow-y: scroll;
         }
 
