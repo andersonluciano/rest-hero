@@ -1,7 +1,6 @@
 # Rest Hero
 
-[![Build Status](https://secure.travis-ci.org/zendframework/zend-expressive-skeleton.svg?branch=master)](https://secure.travis-ci.org/zendframework/zend-expressive-skeleton)
-[![Coverage Status](https://coveralls.io/repos/github/zendframework/zend-expressive-skeleton/badge.svg?branch=master)](https://coveralls.io/github/zendframework/zend-expressive-skeleton?branch=master)
+![logo](public/imgs/marca.png)
 
 *Simple Personal Rest Client to debug REST API's*
 
