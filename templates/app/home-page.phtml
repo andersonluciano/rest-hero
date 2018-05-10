@@ -1,4 +1,9 @@
 <?php $this->layout('layout::default', ['title' => 'Home']) ?>
+    <nav class="navbar navbar-light bg-light">
+        <a class="navbar-brand" href="/">
+            <img src="/imgs/marca.png" class="d-inline-block align-top" height="35" alt="">
+        </a>
+    </nav>
 
     <div class="row " id="env-general">
         <div class="col-3" style="transition-duration: 1s;">
@@ -74,7 +79,7 @@ $this->start("javascript");
         responseEditor.setTheme("ace/theme/monokai");
         responseEditor.session.setMode("ace/mode/json");
 
-        var editor = ace.edit("editor");
+        editor = ace.edit("editor");
         editor.setTheme("ace/theme/monokai");
         editor.session.setMode("ace/mode/json");
 
@@ -93,10 +98,14 @@ $this->start("javascript");
                 bindKey: {win: 'Ctrl+Enter'}
             });
 
+
             $("#url").val(url);
             $("#method").val(method);
             $("#headers").val(headers);
-            editor.setValue(body);
+            if (body != null) {
+                editor.setValue(body);
+            }
+
 
 //----------------------------
             $("#method").change(function () {
@@ -205,6 +214,7 @@ $this->start("javascript");
                 $("#btn-send").removeAttr("disabled");
 
                 if (response.refreshList == true) {
+                    data.created_at = "Agora"
                     makeListItem(data, true);
                 }
             }).error(function (response) {
@@ -229,15 +239,18 @@ $this->start("javascript");
             $.ajax("/?ajax=loadRequests", {
                 method: "POST"
             }).done(function (response) {
-                $("#last-requests").html("");
-                $(response).each(function (idx, elem) {
-                    makeListItem(elem);
-                });
+                if (response.exception == undefined) {
+                    $("#last-requests").html("");
+                    $(response).each(function (idx, elem) {
+                        makeListItem(elem);
+                    });
+                }
             });
         }
 
         function makeListItem(elem, prepend) {
             var li = $("<li class='list-group-item' style='display: none;'>");
+            var badgeClass = "";
             switch (elem.method) {
                 case "GET":
                     badgeClass = 'badge-primary';

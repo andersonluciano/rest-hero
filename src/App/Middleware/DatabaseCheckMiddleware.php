@@ -40,8 +40,8 @@ class DatabaseCheckMiddleware implements ServerMiddlewareInterface
      */
     public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
-        $database = "/tmp/database.sql";
-        
+        $database = __DIR__ . "/../../../data/database.sql";
+
         $create = false;
         if (!file_exists($database)) {
             $create = true;
