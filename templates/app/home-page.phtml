@@ -45,8 +45,35 @@
                 </div>
             </div>
             <div class="row">
+                <div class="col-md-12">
+                    <div class="btn-group" role="group" aria-label="Options">
+                        <button id="btn-toogle-header" type="button" class="btn btn-sm btn-dark" data-toggle="tooltip" data-placement="top" title="Headers"><i class="fa fa-bars"></i></button>
+                        <button id="btn-toogle-basic-auth" type="button" class="btn btn-sm btn-dark" data-toggle="tooltip" data-placement="top" title="Basic Auth"><i class="fa fa-key"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" id="env-headers" style="display: none;">
+
                 <div class="col">
+                    <hr>
+                    <label for="exampleInputEmail1">Headers</label>
                     <textarea class="form-control" id="headers" rows="3" placeholder="Headers"></textarea>
+                </div>
+            </div>
+
+            <div class="row" id="env-basic-auth" style="display: none;">
+                <div class="col">
+                    <hr>
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Basic Auth</label>
+                        <input type="text" class="form-control" id="basicauth-user" placeholder="User">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="basicauth-secret" placeholder="Secret">
+                        <small id="emailHelp" class="form-text text-muted">After typed will be converted in a header</small>
+                    </div>
+                    <button type="button" id="btn-generate-basic" class="btn btn-secondary mb-2 float-right"><i class="fa fa-refresh"></i> Update</button>
                 </div>
             </div>
             <hr>
@@ -128,6 +155,12 @@ $this->start("javascript");
                 }
             });
 //----------------------------
+            $("#btn-generate-basic").click(function () {
+                var auth = '\nAuthorization: Basic ' + btoa($("#basicauth-user").val() + ':' + $("#basicauth-secret").val());
+                var headers = $("#headers").val();
+                $("#headers").val(headers + auth);
+            });
+//----------------------------
             $("#search-input").change(function () {
                 if ($(this).val() == "") {
                     loadLastRequests();
@@ -157,6 +190,16 @@ $this->start("javascript");
                     }
                 }
             });
+
+            $('[data-toggle="tooltip"]').tooltip();
+
+            $("#btn-toogle-basic-auth").click(function () {
+                $("#env-basic-auth").toggle("fast");
+            });
+            $("#btn-toogle-header").click(function () {
+                $("#env-headers").toggle("fast");
+            });
+
 
             loadLastRequests();
         });
@@ -326,6 +369,8 @@ $this->start("stylesheets");
             border-bottom: 1px solid #e2e2e2;
             padding-bottom: 15px;
         }
+
+
     </style>
 
 <?php
