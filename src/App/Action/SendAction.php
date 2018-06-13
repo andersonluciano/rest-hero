@@ -34,7 +34,8 @@ class SendAction implements ServerMiddlewareInterface
                 $refreshList = true;
             }
         } catch (\Exception $e) {
-echo $e->getMessage();exit;
+            echo $e->getMessage();
+            exit;
         }
 
 
@@ -44,6 +45,7 @@ echo $e->getMessage();exit;
             'http_errors' => false
         ]);
 
+        $microtime = microtime(true);
         switch ($body['method']) {
             case "GET":
                 $response = $client->get("");
@@ -64,12 +66,15 @@ echo $e->getMessage();exit;
                 $response = $client->delete("");
                 break;
         }
+        $microtimeAfter = microtime(true);
+        $time = $microtimeAfter - $microtime;
+
 
         $responseBody = $response->getBody()->getContents();
         $statusCode = $response->getStatusCode();
 
 
-        return new JsonResponse(["body" => $responseBody, "statusCode" => $statusCode, "refreshList" => $refreshList]);
+        return new JsonResponse(["body" => $responseBody, "statusCode" => $statusCode, "refreshList" => $refreshList, "time" => round($time, 3)]);
     }
 
     public function parseHeaders($headers)

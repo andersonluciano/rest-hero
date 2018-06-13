@@ -152,7 +152,6 @@ $this->start("javascript");
 //----------------------------
             $("#btn-send").click(send);
             $("#url").keydown(function (e) {
-                console.log(e);
                 if (e.keyCode == 13) {
                     send();
                 }
@@ -170,7 +169,6 @@ $this->start("javascript");
                 }
             });
             $("#search-input").keydown(function (e) {
-                console.log(e);
                 if (e.keyCode == 13) {
                     if ($(this).val() == "") {
                         loadLastRequests();
@@ -252,7 +250,7 @@ $this->start("javascript");
                     }
                 }
 
-                $("#status-code").html(response.statusCode);
+                $("#status-code").html(response.statusCode + " - " + response.time + "s");
                 responseEditor.setValue(response.body);
 
 
@@ -265,11 +263,7 @@ $this->start("javascript");
                 }
             }).error(function (response) {
 
-
                 toastr.error("Ocorreu algum problema durante a requisição");
-
-                console.log(response);
-
 
                 $("#status-code").html(response.status);
                 if (response.responseText != undefined) {
