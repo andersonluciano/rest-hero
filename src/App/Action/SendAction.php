@@ -71,6 +71,9 @@ class SendAction implements ServerMiddlewareInterface
 
 
         $responseBody = $response->getBody()->getContents();
+        if (!mb_check_encoding($responseBody, 'UTF-8')) {
+            $responseBody = utf8_encode($responseBody);
+        }
         $statusCode = $response->getStatusCode();
 
 
