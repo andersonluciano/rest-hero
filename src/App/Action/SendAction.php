@@ -45,37 +45,44 @@ class SendAction implements ServerMiddlewareInterface
             'http_errors' => false
         ]);
 
+
         $microtime = microtime(true);
-        switch ($body['method']) {
-            case "GET":
-                $response = $client->get("");
-                break;
-            case "POST";
+        try {
 
-                $response = $client->post("", [
-                    "json" => json_decode($body['body'], 1)
-                ]);
 
-                break;
-            case "PUT":
-                $response = $client->put("", [
-                    "json" => json_decode($body['body'], 1)
-                ]);
-                break;
-            case "DELETE":
-                $response = $client->delete("");
-                break;
+            switch ($body['method']) {
+                case "GET":
+                    $response = $client->get("");
+                    break;
+                case "POST";
+
+                    $response = $client->post("", [
+                        "json" => json_decode($body['body'], 1)
+                    ]);
+
+                    break;
+                case "PUT":
+                    $response = $client->put("", [
+                        "json" => json_decode($body['body'], 1)
+                    ]);
+                    break;
+                case "DELETE":
+                    $response = $client->delete("");
+                    break;
+            }
+            $microtimeAfter = microtime(true);
+            $time = $microtimeAfter - $microtime;
+
+
+            $responseBody = $response->getBody()->getContents();
+            if (!mb_check_encoding($responseBody, 'UTF-8')) {
+                $responseBody = utf8_encode($responseBody);
+            }
+            $statusCode = $response->getStatusCode();
+        } catch (\Exception $e) {
+            $responseBody = "NOT FOUND";
+            $statusCode = 404;
         }
-        $microtimeAfter = microtime(true);
-        $time = $microtimeAfter - $microtime;
-
-
-        $responseBody = $response->getBody()->getContents();
-        if (!mb_check_encoding($responseBody, 'UTF-8')) {
-            $responseBody = utf8_encode($responseBody);
-        }
-        $statusCode = $response->getStatusCode();
-
 
         return new JsonResponse(["body" => $responseBody, "statusCode" => $statusCode, "refreshList" => $refreshList, "time" => round($time, 3)]);
     }
