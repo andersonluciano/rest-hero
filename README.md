@@ -20,6 +20,11 @@ Requests can be made to::
 ![example](public/imgs/screenshot2.png)
 
 
+## Dependencies
+
+
+[php-sqlite3 module](https://secure.php.net/manual/en/class.sqlite3.php)
+
 ## Getting Started
 
 Start your Rest Hero with composer:
