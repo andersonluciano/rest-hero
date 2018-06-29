@@ -38,7 +38,7 @@ class SendAction implements ServerMiddlewareInterface
             exit;
         }
 
-        if (!strstr("http", $body['url'])) {
+        if (!strstr($body['url'], "http")) {
             $body['url'] = "http://" . $body['url'];
         }
 
