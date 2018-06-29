@@ -38,6 +38,9 @@ class SendAction implements ServerMiddlewareInterface
             exit;
         }
 
+        if (!strstr("http", $body['url'])) {
+            $body['url'] = "http://" . $body['url'];
+        }
 
         $client = new Client([
             'base_uri' => $body['url'],
