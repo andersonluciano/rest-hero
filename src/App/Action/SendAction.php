@@ -45,7 +45,7 @@ class SendAction implements ServerMiddlewareInterface
         $client = new Client([
             'base_uri' => $body['url'],
             "headers" => $headers,
-            'http_errors' => false
+            'http_errors' => false,
         ]);
 
 
@@ -76,18 +76,38 @@ class SendAction implements ServerMiddlewareInterface
             $microtimeAfter = microtime(true);
             $time = $microtimeAfter - $microtime;
 
-
             $responseBody = $response->getBody()->getContents();
+            $contentType = $response->getHeaders()['Content-type'][0];
+            $contentType = explode(";", $contentType)[0];
+            switch ($contentType) {
+                case "text/html":
+                case "text/xhtml":
+                case "text/xml":
+                    $dom = new \DOMDocument();
+                    $dom->preserveWhiteSpace = true;
+                    $dom->loadXML($responseBody);
+                    $dom->formatOutput = true;
+                    $responseBody = $dom->saveXML();
+                    break;
+            }
+
             if (!mb_check_encoding($responseBody, 'UTF-8')) {
                 $responseBody = utf8_encode($responseBody);
             }
             $statusCode = $response->getStatusCode();
         } catch (\Exception $e) {
-            $responseBody = "NOT FOUND";
+            $responseBody = "NOT FOUND: " . $e->getMessage();
             $statusCode = 404;
         }
 
-        return new JsonResponse(["body" => $responseBody, "statusCode" => $statusCode, "refreshList" => $refreshList, "time" => round($time, 3)]);
+        $headersResponse = "";
+        $headers = $response->getHeaders();
+        foreach ($headers as $idx => $header) {
+            $headersResponse .= $idx . ": " . implode($header, "; ") . "<br>";
+
+        }
+
+        return new JsonResponse(["body" => $responseBody, "headers" => $headersResponse, "contentType" => $contentType, "statusCode" => $statusCode, "refreshList" => $refreshList, "time" => round($time, 3)]);
     }
 
     public function parseHeaders($headers)
