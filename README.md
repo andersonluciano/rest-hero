@@ -4,7 +4,7 @@
 
 *Simple Personal Rest Client to debug REST API's*
 
-Build with [zend-expressive](https://github.com/zendframework/zend-expressive) and 
+Build with [zend-expressive](https://github.com/zendframework/zend-expressive) and
 [Bootstrap](http://getbootstrap.com) to
 provide a simple and personal rest client to debug REST API's.
 
@@ -15,7 +15,7 @@ Requests can be made to::
 * POST some resource with or without JSON Body
 * PUT some resource with or without JSON Body
 * DELETE some resource
-    
+
 
 ![example](public/imgs/screenshot2.png)
 
@@ -49,6 +49,6 @@ You can then browse to http://localhost:8080 and be happy!
 $ docker build . -t rest-hero
 ```
 * Run the container:
-* ```
+```
 $ docker run -t -p 8080:8080 rest-hero
-* ```
+```
