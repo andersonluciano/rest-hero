@@ -8,4 +8,4 @@ composer install
 
 WORKDIR /app/public
 
-CMD [ "php", "-S", "localhost:8080" ]
+CMD [ "php", "-S", "0.0.0.0:8080" ]
