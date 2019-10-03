@@ -41,3 +41,14 @@ $ php -S localhost:8080
 ```
 
 You can then browse to http://localhost:8080 and be happy!
+
+## How to Run By Docker
+
+* At first, build the docker image:
+```
+$ docker build . -t rest-hero
+```
+* Run the container:
+* ```
+$ docker run -t -p 8080:8080 rest-hero
+* ```
